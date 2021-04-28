@@ -1,1 +1,8 @@
+# vscode components
 .vscode
+build
+
+# executable
+smash/smash
+
+workspace.xml

@@ -1,0 +1,1 @@
+int expand_var(char* var, char* expanded);

@@ -1,7 +1,6 @@
 #pragma once
 
-#define MAX_TOKEN_SIZE 100
+#define MAX_TOKEN_STRLEN 200
+#define MAX_NUM_TOKENS 100
 
-typedef char* _token;
-
-//_token* tokenise(char* string, char* metacharacters);
+typedef char _token[MAX_TOKEN_STRLEN];

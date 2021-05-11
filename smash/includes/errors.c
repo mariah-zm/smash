@@ -22,3 +22,19 @@ void print_error(int err_code, char* err_cause)
     fprintf(stderr, "%s: %s\n", err_msg, err_cause);
 }
 
+void exit_shell(int err_code, void* ptr)
+{   
+    switch(err_code)
+    {
+        case ERR_INIT:
+            fprintf(stderr, "Failed to initialise shell variables.\n");
+            break;
+        case OK:
+            printf("\n");
+            break;
+        default:
+            printf("Error occured.\n");
+    }
+
+    printf("Exiting smash...\n");
+}

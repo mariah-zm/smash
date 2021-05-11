@@ -19,17 +19,18 @@ int init_shell_vars()
     char* home = getenv("HOME");
     char* terminal_name = ttyname(STDOUT_FILENO);
 
-    char cwd[MAX_TOKEN_STRLEN];
-    char shell[MAX_TOKEN_STRLEN];
+    char cwd[MAX_TOKEN_STRLEN] = "\0";
+    char shell[MAX_TOKEN_STRLEN] = "\0";
     getcwd(cwd, MAX_TOKEN_STRLEN);
     getcwd(shell, MAX_TOKEN_STRLEN);
 
     strcat(shell, "/bin/smash");
  
     if(path == NULL 
-        || cwd == NULL
+        || cwd[0] == '\0'
         || user == NULL 
         || home == NULL
+        || shell[0] == '\0'
         || terminal_name == NULL)
         return ERR_INIT;
 

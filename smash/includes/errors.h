@@ -8,7 +8,4 @@
 
 void print_error(int err_code, char* err_cause);
 
-static void exit_shell()
-{
-    fprintf(stderr, "Failed to initialise shell variables");
-}
+void exit_shell(int err_code, void* ptr);

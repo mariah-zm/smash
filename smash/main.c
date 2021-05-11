@@ -12,7 +12,7 @@ int main(void) {
     // Get input and echo here
     char *line;
 
-    if (atexit(exit_shell))
+    if (on_exit(exit_shell, "exiting"))
         perror("Cannot register exit handler");
 
     // Initialising shell variables on start up
@@ -27,6 +27,5 @@ int main(void) {
         linenoiseFree(line);
     }
     
-    printf("Exiting smash...\n");
     return EXIT_SUCCESS;
 }

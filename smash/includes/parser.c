@@ -6,21 +6,9 @@
 #include "errors.h"
 #include "variables.h"
 
-#define PIPE '|'
-#define GREATER_THAN '>'
-#define SMALLER_THAN '<'
-#define SEMICOLON ';'
-#define SPACE " "
-#define TAB '\t'
-#define NEWLINE '\n'
-#define QUOTATION '\"'
-#define DOLLAR_SIGN '$'
-#define BACKSLASH '\\'
-
-
 int tokenise(char* line, _token tokens[MAX_NUM_TOKENS])
 {
-    char* token = strtok(line, SPACE);
+    char* token = strtok(line, QUOTATION);
 
     // Check if user wants to exit
     if (token != NULL && strcmp(token, "exit") == 0)
@@ -29,11 +17,11 @@ int tokenise(char* line, _token tokens[MAX_NUM_TOKENS])
     // Parse and copy tokens
     int i = 0;
     while(token != NULL && i < MAX_NUM_TOKENS - 1) {
-        if(strlen(token) > 10)
+        if(strlen(token) > MAX_TOKEN_STRLEN)
             return ERR_TOKEN_LENGTH;
 
         strcpy(tokens[i++], token);
-        token = strtok(NULL, SPACE);
+        token = strtok(NULL, QUOTATION);
     }
 
     return 0;
@@ -42,7 +30,7 @@ int tokenise(char* line, _token tokens[MAX_NUM_TOKENS])
 void parse(char* line)
 {
     int return_code;
-    char result[20];
+    char result[MAX_TOKEN_STRLEN];
 
     _token tokens[MAX_NUM_TOKENS];
 

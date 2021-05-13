@@ -11,6 +11,7 @@ int main(void) {
     
     // Get input and echo here
     char *line;
+    char result[MAX_ENV_VALUE_STRLEN];
 
     if (on_exit(exit_shell, NULL))
         perror("Cannot register exit handler\n");
@@ -21,8 +22,10 @@ int main(void) {
 
     while((line = linenoise(PROMPT)) != NULL) {
 
-        parse(line);
-        
+        // parse(line);
+        expand_var(line, result);
+        printf("%s\n", result);
+
         // Freeing memory allocated by linenoise using linenoise
         linenoiseFree(line);
     }

@@ -1,50 +1,123 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 
 #include "parser.h"
 #include "errors.h"
 #include "variables.h"
+#include "tokeniser.h"
 
-int tokenise(char* line, _token tokens[MAX_NUM_TOKENS])
+
+// void parse(char* line)
+// {
+//     int return_code;
+//     char result[MAX_TOKEN_STRLEN] = "\0";
+
+//     token_t tokens[MAX_NUM_TOKENS];
+
+//     if(line[0] == DOLLAR_SIGN){
+//         if((return_code = expand_var(line, result)) != 0)
+//             print_error(return_code, result);
+//         else 
+//             printf("%s\n", result);
+//     } else 
+//         if((return_code = tokenise(line)) != 0) {
+//             char error[50];
+
+//             snprintf(error, 50, "maximum token length is %d", MAX_TOKEN_STRLEN);
+
+//             print_error(return_code, error);
+//         }
+// }
+
+void parse(char* input)
 {
-    char* token = strtok(line, QUOTATION);
+    if(contains_metachar(NEWLINE, input)){
 
-    // Check if user wants to exit
-    if (token != NULL && strcmp(token, "exit") == 0)
-        return 0;
+    } else if (contains_metachar(SEMICOLON, input)){
 
-    // Parse and copy tokens
-    int i = 0;
-    while(token != NULL && i < MAX_NUM_TOKENS - 1) {
-        if(strlen(token) > MAX_TOKEN_STRLEN)
-            return ERR_TOKEN_LENGTH;
+    } else if (contains_metachar(PIPE, input)) {
 
-        strcpy(tokens[i++], token);
-        token = strtok(NULL, QUOTATION);
-    }
-
-    return 0;
+    } 
 }
 
-void parse(char* line)
+bool contains_metachar(char metachar, char* string)
 {
-    int return_code;
-    char result[MAX_TOKEN_STRLEN];
+    if(string == NULL)
+        return false;
 
-    _token tokens[MAX_NUM_TOKENS];
+    char* ptr;
 
-    if(line[0] == DOLLAR_SIGN){
-        if((return_code = expand_var(line, result)) != 0)
-            print_error(return_code, result);
+    if((ptr = strchr(string, metachar)) == NULL)
+        return false;
+    else {
+        // If occurence is quoted or escaped then it is a literal value
+        if(is_quoted(string, metachar) || is_escaped(ptr))
+            return contains_metachar(metachar, ++ptr);
         else 
-            printf("%s\n", result);
-    } else 
-        if((return_code = tokenise(line, tokens)) != 0) {
-            char error[50];
+            return true;
+    }
+}
 
-            snprintf(error, 50, "maximum token length is %d", MAX_TOKEN_STRLEN);
+bool is_quoted(char* full_string, char metachar)
+{
+    char metachar_string[2];
+    metachar_string[0] = metachar;
+    metachar_string[1] = '\0';
 
-            print_error(return_code, error);
-        }
+    regex_t regex;
+    char pattern[50];
+
+    strcpy(pattern, "[^\"]*[\"][^\"]*[");
+    strcat(pattern, metachar_string);
+    strcat(pattern, "]+[^\"]*[\"][^\"]*");
+
+    regcomp(&regex, pattern, REG_EXTENDED);
+
+    int match = regexec(&regex, full_string, 0, NULL, 0);
+
+    regfree(&regex);
+
+    if(match == 0)
+        return true;
+    else
+        return false;
+}
+
+bool is_escaped(char* ptr)
+{
+    ptr--;
+
+    if(*ptr == BACKSLASH)
+        return true;
+    else 
+        return false;
+}
+
+bool is_assignment(char* line)
+{
+    if(strchr(line, '=') == NULL)
+        return false;
+    else 
+        return true;
+}
+
+void quote_removal(char* string, char to_remove)
+{   
+    char* ptr = strchr(string, to_remove);
+
+    // Base case
+    if(ptr == NULL)
+        return;
+
+    if(!is_escaped(ptr)){
+        int index = strlen(string) - strlen(ptr);
+        string[index] = '\0';
+    }
+
+    strcat(string, ++ptr);
+
+    // Recursive call
+    quote_removal(string, to_remove);
 }

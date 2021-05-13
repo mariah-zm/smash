@@ -6,6 +6,7 @@
 #include "variables.h"
 #include "errors.h"
 #include "parser.h"
+#include "tokeniser.h"
 
 int num_vars = 0;
 
@@ -109,8 +110,11 @@ int expand_var(char* input, char* result)
     return return_code;
 }
 
-int set_shell_var(char* name, char* value)
+int set_shell_var(char* assignment)
 {
+    char name[VAR_NAME_STRLEN];
+    char value[MAX_TOKEN_STRLEN];
+
     if(is_var_name_valid(name) == ERR_INVALID_SYNTAX)
         return ERR_INVALID_SYNTAX;
 

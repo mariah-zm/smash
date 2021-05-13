@@ -26,7 +26,7 @@ int expand_var(char* var, char* expanded);
  * @param statement an assignment statement in the form VARIABLE=VALUE 
  * @return OK if 
  */ 
-int set_shell_var(char* name, char* value);
+int set_shell_var(char* assignment);
 
 void add_var(char* name);
 

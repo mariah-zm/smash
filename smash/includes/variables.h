@@ -2,7 +2,7 @@
 
 #define VAR_NAME_STRLEN 50
 
-
+#define PROMPT "smash> "
 
 /**
  * Populates the environment variables on application start up. 
@@ -24,8 +24,10 @@ int expand_var(char* var, char* expanded);
  * Modifies a shell variable or creates a new one if it does not exist.
  * 
  * @param statement an assignment statement in the form VARIABLE=VALUE 
- * @return
+ * @return OK if 
  */ 
-int set_shell_var(char* statement);
+int set_shell_var(char* name, char* value);
 
 void add_var(char* name);
+
+int is_var_name_valid(char* name);

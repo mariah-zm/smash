@@ -2,6 +2,8 @@
 
 #define OK 0
 #define ERR_INIT 1
+#define ERR_SET 2
+#define ERR_UNSET 3
 #define ERR_TOKEN_LENGTH 4
 #define ERR_INVALID_SYNTAX 5
 #define ERR_UNKNOWN_COMMAND 6

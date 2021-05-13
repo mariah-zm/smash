@@ -5,10 +5,16 @@
 
 void print_error(int err_code, char* err_cause)
 {
-    char err_msg[30];
+    char err_msg[100];
 
     switch(err_code)
     {
+        case ERR_SET:
+            strcpy(err_msg, "COULD NOT SET SHELL VARIABLE");
+            break;
+        case ERR_UNSET:
+            strcpy(err_msg, "COULD NOT UNSET SHELL VARIABLE");
+            break;
         case ERR_TOKEN_LENGTH:
             strcpy(err_msg, "INVALID TOKEN LENGTH");
             break; 
@@ -19,7 +25,10 @@ void print_error(int err_code, char* err_cause)
             strcpy(err_msg, "ERROR");
     }
 
-    fprintf(stderr, "%s: %s\n", err_msg, err_cause);
+    if(err_cause[0] != '\0')
+        fprintf(stderr, "%s: %s\n", err_msg, err_cause);
+    else
+        fprintf(stderr, "%s\n", err_msg);
 }
 
 void exit_shell(int err_code, void* ptr)

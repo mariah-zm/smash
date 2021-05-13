@@ -1,19 +1,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <regex.h>
 
 #include "variables.h"
 #include "errors.h"
 #include "parser.h"
 
-char shell_variables[100][VAR_NAME_STRLEN];
-
 int num_vars = 0;
 
 int init_shell_vars()
 {
-    typedef enum {PATH, PROMPT, CWD, USER, HOME, SHELL, TERMINAL, EXITCODE} shell_var;
-
     char* path = getenv("PATH");
     char* user = getenv("USER");
     char* home = getenv("HOME");
@@ -35,7 +32,7 @@ int init_shell_vars()
         return ERR_INIT;
 
     if(setenv("PATH", path, 1) == -1
-        || setenv("PROMPT", "smash> ", 1) == -1
+        || setenv("PROMPT", PROMPT, 1) == -1
         || setenv("CWD", cwd, 1) == -1
         || setenv("USER", user, 1) == -1
         || setenv("HOME", home, 1) == -1
@@ -43,15 +40,6 @@ int init_shell_vars()
         || setenv("TERMINAL", terminal_name, 1) == -1
         || setenv("EXITCODE", "0", 1) == -1)
         return ERR_INIT;
-
-    add_var("PATH");
-    add_var("PROMPT");
-    add_var("CWD");
-    add_var("USER");
-    add_var("HOME");
-    add_var("SHELL");
-    add_var("TERMINAL");
-    add_var("EXITCODE");
 
     return OK;    
 }
@@ -61,42 +49,91 @@ int expand_var(char* input, char* result)
     // Incrementing pointer to remove the $
     input++;
 
-    int last_index;
+    int return_code = OK;
+
     char var_name[VAR_NAME_STRLEN];
+    char* extra_chars = NULL;
 
-    if(input[0] == '{'){
+    regex_t regex_enclosed;
+    regex_t regex_enclosed_more_chars;
+    regex_t regex_not_enclosed;
+
+    char* pattern_enclosed = "^[{][^{}]+[}]$";
+    char* pattern_enclosed_more_chars = "^[{][^{}]+[}].+";
+    char* pattern_not_enclosed = "^[^{]+";
+
+    regcomp(&regex_enclosed, pattern_enclosed, REG_EXTENDED);
+    regcomp(&regex_enclosed_more_chars, pattern_enclosed_more_chars, REG_EXTENDED);
+    regcomp(&regex_not_enclosed, pattern_not_enclosed, 0);
+    
+    if(regexec(&regex_enclosed, input, 0, NULL, 0) == 0){
+        // Incrementing pointer to remove the {
         strcpy(var_name, ++input);
-        
-        last_index = strlen(var_name);
 
-        if(var_name[last_index-1] != '}'){
-            strcpy(result, "missing \'}\'");
-            return ERR_INVALID_SYNTAX;
-        } else
-            var_name[last_index-1] = '\0';
+        int last_index = strlen(var_name);
+        var_name[last_index-1] = '\0';
+    } else if (regexec(&regex_enclosed_more_chars, input, 0, NULL, 0) == 0){
+        strcpy(var_name, ++input);
+        extra_chars = strchr(input, '}');
 
-    } else {
+        int index = strlen(var_name) - strlen(extra_chars);
+        var_name[index] = '\0';
+    } else if (regexec(&regex_not_enclosed, input, 0, NULL, 0) == 0){
         strcpy(var_name, input);
+    } else {
+        strcpy(result, "missing or extra, \'{\' \'}\'");
 
-        last_index = strlen(var_name);
+        return_code = ERR_INVALID_SYNTAX;
+    }
 
-        if(var_name[last_index-1] == '}'){
-            strcpy(result, "missing \'{\'");
-            return ERR_INVALID_SYNTAX;
+    if(return_code != ERR_INVALID_SYNTAX){
+        if(is_var_name_valid(var_name) != ERR_INVALID_SYNTAX){
+            char* value = getenv(var_name);
+
+            if(value != NULL)
+                strcpy(result, value);
+
+            if(extra_chars != NULL)
+                strcat(result, ++extra_chars);
+        } else {
+            strcpy(result, "variable name is not valid");
+
+            return_code = ERR_INVALID_SYNTAX;
         }
     }
 
-    strcpy(result, getenv(var_name));
+    regfree(&regex_enclosed);
+    regfree(&regex_enclosed_more_chars);
+    regfree(&regex_not_enclosed);
 
-    return 0;
+    return return_code;
 }
 
-int set_env_var(char* statement)
+int set_shell_var(char* name, char* value)
 {
+    if(is_var_name_valid(name) == ERR_INVALID_SYNTAX)
+        return ERR_INVALID_SYNTAX;
 
+    if(setenv(name, value, 1) == -1)
+        return ERR_SET;
+
+    return OK;
 }
 
-void add_var(char* name)
+int is_var_name_valid(char* name)
 {
-    strcpy(shell_variables[num_vars++], name);
+    // Validating variable name
+    regex_t regex;
+    int match;
+    char* regex_pattern = "^[a-zA-Z_][a-zA-Z0-9_]*$";
+
+    regcomp(&regex, regex_pattern, REG_EXTENDED);
+    match = regexec(&regex, name, 0, NULL, 0);
+
+    regfree(&regex);
+
+    if(match != 0)
+        return ERR_INVALID_SYNTAX;
+    else
+        return OK;
 }

@@ -1,6 +1,9 @@
 #pragma once 
 
-#define VAR_NAME_STRLEN 50
+#include <stdbool.h>
+
+#define MAX_VAR_NAME_STRLEN 30
+#define MAX_VAR_VALUE_STRLEN 500
 
 #define PROMPT "smash> "
 
@@ -28,6 +31,6 @@ int expand_var(char* var, char* expanded);
  */ 
 int set_shell_var(char* assignment);
 
-void add_var(char* name);
+bool is_var_name_valid(char* name);
 
-int is_var_name_valid(char* name);
+bool is_matched(char* input, char* pattern);

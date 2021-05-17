@@ -5,10 +5,7 @@
 
 #include "variables.h"
 #include "errors.h"
-#include "parser.h"
-#include "tokeniser.h"
-
-int num_vars = 0;
+#include "utils.h"
 
 int init_shell_vars()
 {
@@ -17,13 +14,11 @@ int init_shell_vars()
     char* home = getenv("HOME");
     char* terminal_name = ttyname(STDOUT_FILENO);
 
-    char cwd[MAX_TOKEN_STRLEN] = "\0";
-    char shell[MAX_TOKEN_STRLEN] = "\0";
-    getcwd(cwd, MAX_TOKEN_STRLEN);
-    getcwd(shell, MAX_TOKEN_STRLEN);
+    char cwd[MAX_VAR_VALUE_STRLEN] = "\0";
+    char shell[MAX_VAR_VALUE_STRLEN] = "\0";
+    getcwd(cwd, MAX_VAR_VALUE_STRLEN);
+    getcwd(shell, MAX_VAR_VALUE_STRLEN);
 
-    strcat(shell, "/bin/smash");
- 
     if(path == NULL 
         || cwd[0] == '\0'
         || user == NULL 
@@ -31,6 +26,8 @@ int init_shell_vars()
         || shell[0] == '\0'
         || terminal_name == NULL)
         return ERR_INIT;
+
+    strcat(shell, "/bin/smash");
 
     if(setenv("PATH", path, 1) == -1
         || setenv("PROMPT", PROMPT, 1) == -1
@@ -52,34 +49,22 @@ int expand_var(char* input, char* result)
 
     int return_code = OK;
 
-    char var_name[VAR_NAME_STRLEN];
+    char var_name[MAX_VAR_NAME_STRLEN];
     char* extra_chars = NULL;
-
-    regex_t regex_enclosed;
-    regex_t regex_enclosed_more_chars;
-    regex_t regex_not_enclosed;
-
-    char* pattern_enclosed = "^[{][^{}]+[}]$";
-    char* pattern_enclosed_more_chars = "^[{][^{}]+[}].+";
-    char* pattern_not_enclosed = "^[^{]+";
-
-    regcomp(&regex_enclosed, pattern_enclosed, REG_EXTENDED);
-    regcomp(&regex_enclosed_more_chars, pattern_enclosed_more_chars, REG_EXTENDED);
-    regcomp(&regex_not_enclosed, pattern_not_enclosed, 0);
     
-    if(regexec(&regex_enclosed, input, 0, NULL, 0) == 0){
+    if(is_matched(input, ENCLOSED_PATTERN)){
         // Incrementing pointer to remove the {
         strcpy(var_name, ++input);
 
         int last_index = strlen(var_name);
         var_name[last_index-1] = '\0';
-    } else if (regexec(&regex_enclosed_more_chars, input, 0, NULL, 0) == 0){
+    } else if (is_matched(input, ENCLOSED_MORE_CHARS_PATTERN)){
         strcpy(var_name, ++input);
         extra_chars = strchr(input, '}');
 
         int index = strlen(var_name) - strlen(extra_chars);
         var_name[index] = '\0';
-    } else if (regexec(&regex_not_enclosed, input, 0, NULL, 0) == 0){
+    } else if (is_matched(input, NOT_ENCLOSED_PATTERN)){
         strcpy(var_name, input);
     } else {
         strcpy(result, "missing or extra, \'{\' \'}\'");
@@ -88,7 +73,7 @@ int expand_var(char* input, char* result)
     }
 
     if(return_code != ERR_INVALID_SYNTAX){
-        if(is_var_name_valid(var_name) != ERR_INVALID_SYNTAX){
+        if(is_var_name_valid(var_name)){
             char* value = getenv(var_name);
 
             if(value != NULL)
@@ -103,20 +88,23 @@ int expand_var(char* input, char* result)
         }
     }
 
-    regfree(&regex_enclosed);
-    regfree(&regex_enclosed_more_chars);
-    regfree(&regex_not_enclosed);
-
     return return_code;
 }
 
 int set_shell_var(char* assignment)
 {
-    char name[VAR_NAME_STRLEN];
-    char value[MAX_TOKEN_STRLEN];
-
-    if(is_var_name_valid(name) == ERR_INVALID_SYNTAX)
+    // Chcecking if the given assignment is in the correct syntax
+    if(!is_matched(assignment, ASSIGNMENT_PATTERN))
         return ERR_INVALID_SYNTAX;
+
+    char* name = strtok(assignment, "=");
+    assignment++;
+    char* value = strtok(NULL, "\0");
+
+    if(!is_var_name_valid(name))
+        return ERR_INVALID_SYNTAX;
+
+    printf("name: %s\nvalue: %s\n", name, value);
 
     if(setenv(name, value, 1) == -1)
         return ERR_SET;
@@ -124,20 +112,11 @@ int set_shell_var(char* assignment)
     return OK;
 }
 
-int is_var_name_valid(char* name)
+bool is_var_name_valid(char* name)
 {
-    // Validating variable name
-    regex_t regex;
-    int match;
-    char* regex_pattern = "^[a-zA-Z_][a-zA-Z0-9_]*$";
-
-    regcomp(&regex, regex_pattern, REG_EXTENDED);
-    match = regexec(&regex, name, 0, NULL, 0);
-
-    regfree(&regex);
-
-    if(match != 0)
-        return ERR_INVALID_SYNTAX;
+    if(strlen(name) <= MAX_VAR_NAME_STRLEN 
+        && is_matched(name, VAR_NAME_PATTERN))
+        return true;
     else
-        return OK;
+        return false;
 }

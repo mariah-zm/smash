@@ -4,6 +4,7 @@ project(smash)
 set(CMAKE_C_STANDARD 11)
 include_directories(linenoise includes)
 
-set(SOURCES linenoise/linenoise.c includes/parser.c includes/errors.c includes/variables.c)
+set(UTILS linenoise/linenoise.c includes/utils.c)
+set(SMASH_SOURCES includes/parser.c includes/errors.c includes/variables.c includes/tokeniser.c)
 
-add_executable(smash main.c ${SOURCES})
+add_executable(smash main.c ${UTILS} ${SMASH_SOURCES})

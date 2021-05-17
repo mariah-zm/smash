@@ -3,7 +3,7 @@
 
 #include "errors.h"
 
-void print_error(int err_code, char* err_cause)
+void print_error(int err_code, char *err_cause)
 {
     char err_msg[100];
 
@@ -25,13 +25,13 @@ void print_error(int err_code, char* err_cause)
             strcpy(err_msg, "ERROR");
     }
 
-    if(err_cause[0] != '\0')
+    if(err_cause != NULL)
         fprintf(stderr, "%s: %s\n", err_msg, err_cause);
     else
         fprintf(stderr, "%s\n", err_msg);
 }
 
-void exit_shell(int err_code, void* ptr)
+void exit_shell(int err_code, void *ptr)
 {   
     switch(err_code)
     {

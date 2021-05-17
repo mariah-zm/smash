@@ -13,3 +13,5 @@
 #define NOT_ENCLOSED_PATTERN "^[^{} ]+$"
 
 bool is_matched(char* input, char* pattern);
+
+void remove_char(char*string, char to_remove);

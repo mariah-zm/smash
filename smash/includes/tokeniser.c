@@ -114,18 +114,8 @@ bool is_quoted(char* full_string, char* sub_string)
     if(sub_string == NULL)
         return false;
 
-    regex_t regex;
-    char pattern[MAX_TOKEN_STRLEN];
-
     // Only one quote exists before the sub-string, it means the sub string  
-    strcpy(pattern, "^[^\"]*[\"][^\"]*");
-    if(*sub_string == '|')
-        strcat(pattern, "\\");
-
-    strcat(pattern, sub_string);
-    strcat(pattern, "$");
-
-    return is_matched(full_string, pattern);
+    return is_matched(sub_string, "^[^\"]*[\"][^\"]*([^\"]*[\"][^\"]*[\"])*$");
 }
 
 bool is_escaped(char* ptr)
@@ -139,12 +129,4 @@ bool is_escaped(char* ptr)
         return true;
     else 
         return false;
-}
-
-bool is_assignment(char* line)
-{
-    if(strchr(line, '=') == NULL)
-        return false;
-    else 
-        return true;
 }

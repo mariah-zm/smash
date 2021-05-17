@@ -47,8 +47,6 @@ int expand_var(char* input, char* result)
     // Incrementing pointer to remove the $
     input++;
 
-    int return_code = OK;
-
     char var_name[MAX_VAR_NAME_STRLEN];
     char* extra_chars = NULL;
     
@@ -69,26 +67,24 @@ int expand_var(char* input, char* result)
     } else {
         strcpy(result, "missing or extra, \'{\' \'}\'");
 
-        return_code = ERR_INVALID_SYNTAX;
+        return ERR_INVALID_SYNTAX;
     }
 
-    if(return_code != ERR_INVALID_SYNTAX){
-        if(is_var_name_valid(var_name)){
-            char* value = getenv(var_name);
+    if(is_var_name_valid(var_name)){
+        char* value = getenv(var_name);
 
-            if(value != NULL)
-                strcpy(result, value);
+        if(value != NULL)
+            strcpy(result, value);
 
-            if(extra_chars != NULL)
-                strcat(result, ++extra_chars);
-        } else {
-            strcpy(result, "variable name is not valid");
+        if(extra_chars != NULL)
+            strcat(result, ++extra_chars);
+    } else {
+        strcpy(result, "variable name is not valid");
 
-            return_code = ERR_INVALID_SYNTAX;
-        }
+        return ERR_INVALID_SYNTAX;
     }
 
-    return return_code;
+    return OK;
 }
 
 int set_shell_var(char* assignment)
@@ -103,8 +99,6 @@ int set_shell_var(char* assignment)
 
     if(!is_var_name_valid(name))
         return ERR_INVALID_SYNTAX;
-
-    printf("name: %s\nvalue: %s\n", name, value);
 
     if(setenv(name, value, 1) == -1)
         return ERR_SET;

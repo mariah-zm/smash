@@ -8,6 +8,6 @@
 #define ERR_INVALID_SYNTAX 5
 #define ERR_UNKNOWN_COMMAND 6
 
-void print_error(int err_code, char* err_cause);
+void print_error(int err_code, char *err_cause);
 
-void exit_shell(int err_code, void* ptr);
+void exit_shell(int err_code, void *ptr);

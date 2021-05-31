@@ -5,13 +5,14 @@
 // Input syntax patterns
 #define QUOTATION_PATTERN "(^[^\"]*[\"][^\"]*[\"][^\"]*$)+"
 #define VAR_NAME_PATTERN "^[a-zA-Z_][a-zA-Z0-9_]*$"
-#define ASSIGNMENT_PATTERN "^[^= ]+[=][^= ]+$"
+#define ASSIGNMENT_PATTERN "^[^=[:blank:]]+[=][^=[:blank:]].*$"
 
 // Variable expansion patterns
 #define ENCLOSED_PATTERN "^[{][^{}]+[}]$"
 #define ENCLOSED_MORE_CHARS_PATTERN "^[{][^{}]+[}].+"
-#define NOT_ENCLOSED_PATTERN "^[^{} ]+$"
+#define NOT_ENCLOSED_PATTERN "^[^{}\\s]+$"
 
-bool is_matched(char* input, char* pattern);
+#define MATCH 0
+#define NOMATCH 1
 
-void remove_char(char*string, char to_remove);
+int check_match(char* input, char* pattern);

@@ -16,3 +16,5 @@ bool is_assignment(char *string);
 
 bool is_metachar_or_control_op(char *string);
 
+void remove_char(char*string, char to_remove);
+

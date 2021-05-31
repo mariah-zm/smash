@@ -7,8 +7,8 @@
 #include "includes/variables.h"
 #include "includes/errors.h"
 
-int main(void) {
-    
+int main(int argc, char **argv, char **envp)
+{
     // Get input and echo here
     char *line;
 
@@ -16,16 +16,22 @@ int main(void) {
         perror("Cannot register exit handler\n");
 
     // Initialising shell variables on start up
-    if(init_shell_vars() == ERR_INIT)
+    if(init_shell_vars(argv[0], envp) == ERR_INIT)
         exit(ERR_INIT);
 
-    while((line = linenoise(PROMPT)) != NULL) {
+    // Since this is a pointer, when the contents of the shell variable change, the output will also be updated
+    char *prompt = get_shell_var("PROMPT");
+
+    while((line = linenoise(prompt)) != NULL) {
 
         parse(line);
 
         // Freeing memory allocated by linenoise using linenoise
         linenoiseFree(line);
     }
+
+    // to put in exit function
+    destroy_shell_vars();
     
     return OK;
 }

@@ -5,7 +5,7 @@
 
 #include "parser.h"
 #include "errors.h"
-#include "utils.h"
+#include "matcher.h"
 #include "variables.h"
 
 void parse(char *line)
@@ -13,7 +13,7 @@ void parse(char *line)
     int return_code;
     token_t tokens[MAX_NUM_TOKENS];
 
-    if(strchr(line, '\"') != NULL && !is_matched(line, QUOTATION_PATTERN))
+    if(strchr(line, '\"') != NULL && check_match(line, QUOTATION_PATTERN) == NOMATCH)
         print_error(ERR_INVALID_SYNTAX, "missing \"");
     else {
         int token_count = 0;
@@ -26,16 +26,23 @@ void parse(char *line)
         
         quote_removal(tokens, token_count);
 
-        if(is_assignment(tokens[0])){
-            if(set_shell_var(tokens[0]) == ERR_INVALID_SYNTAX) 
+        if(check_match(tokens[0], ASSIGNMENT_PATTERN) == MATCH){
+            char name[MAX_VAR_NAME_STRLEN];
+            char value[MAX_VAR_VALUE_STRLEN];
+
+            if(var_assignment(tokens[0], name, value) == ERR_INVALID_SYNTAX) 
                 print_error(ERR_INVALID_SYNTAX, NULL);
+            else
+                insert_shell_var(name, value, false);
+        
+        // It is not allowed for the first token to be a metachar or control op
         } else if(is_metachar_or_control_op(tokens[0])){
             char msg[50] = "unexpected token near \'";
             strcat(msg, tokens[0]);
             strcat(msg,  "\'");
             print_error(ERR_INVALID_SYNTAX, msg);
         } else {
-            printf("Not a valid command\n");
+            printf("%s\n", tokens[0]);
         }
     }
 }
@@ -101,4 +108,25 @@ bool is_metachar_or_control_op(char *string)
         return true;
     else
         return false;
+}
+
+void remove_char(char*string, char to_remove)
+{
+    char* ptr = strchr(string, to_remove);
+    char removed[MAX_TOKEN_STRLEN];
+
+    // Base case
+    if(ptr == NULL)
+        return;
+
+    if(!is_escaped(ptr)){
+        int index = strlen(string) - strlen(ptr);
+        strcpy(removed, ++ptr);
+        string[index] = '\0';
+    }
+    
+    strcat(string, removed);
+
+    // Recursive call
+    remove_char(string, to_remove);
 }

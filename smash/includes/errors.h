@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #define OK 0
+#define ERR_GENERIC -1
 #define ERR_INIT 1
 #define ERR_SET 2
 #define ERR_UNSET 3

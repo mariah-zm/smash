@@ -5,6 +5,7 @@
 #include "tokeniser.h"
 #include "errors.h"
 #include "variables.h"
+#include "matcher.h"
 
 void tokenise(token_t tokens[MAX_NUM_TOKENS], char* input, int* index, int delim_level)
 {   
@@ -115,7 +116,7 @@ bool is_quoted(char* full_string, char* sub_string)
         return false;
 
     // Only one quote exists before the sub-string, it means the sub string  
-    return is_matched(sub_string, "^[^\"]*[\"][^\"]*([^\"]*[\"][^\"]*[\"])*$");
+    return check_match(sub_string, "^[^\"]*[\"][^\"]*([^\"]*[\"][^\"]*[\"])*$");
 }
 
 bool is_escaped(char* ptr)

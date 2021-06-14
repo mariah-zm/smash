@@ -8,6 +8,9 @@
 #define ERR_TOKEN_LENGTH 4
 #define ERR_INVALID_SYNTAX 5
 #define ERR_UNKNOWN_COMMAND 6
+#define ERR_ARGS 7
+#define ERR_DIR 8
+#define ERR_FILE 9
 
 void print_error(int err_code, char *err_cause);
 

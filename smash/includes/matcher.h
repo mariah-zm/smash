@@ -12,7 +12,7 @@
 #define ENCLOSED_MORE_CHARS_PATTERN "^[{][^{}]+[}].+"
 #define NOT_ENCLOSED_PATTERN "^[^{}\\s]+$"
 
-#define MATCH 0
-#define NOMATCH 1
+#define MATCH 1
+#define NOMATCH 0
 
 int check_match(char* input, char* pattern);

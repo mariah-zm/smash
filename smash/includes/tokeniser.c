@@ -7,7 +7,7 @@
 #include "variables.h"
 #include "matcher.h"
 
-void tokenise(token_t tokens[MAX_NUM_TOKENS], char* input, int* index, int delim_level)
+void tokenise(token_t *tokens, char* input, int* index, int delim_level)
 {   
     // Base case 
     if(strlen(input) == 0)

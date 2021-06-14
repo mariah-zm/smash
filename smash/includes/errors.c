@@ -21,6 +21,15 @@ void print_error(int err_code, char *err_cause)
         case ERR_INVALID_SYNTAX:
             strcpy(err_msg, "INVALID SYNTAX");
             break;
+        case ERR_ARGS:
+            strcpy(err_msg, "ARGUMENTS ERROR");
+            break;
+        case ERR_DIR:
+            strcpy(err_msg, "DIRECTORY ERROR");
+            break;
+        case ERR_FILE:
+            strcpy(err_msg, "FILE ERROR");
+            break;
         default:
             strcpy(err_msg, "ERROR");
     }

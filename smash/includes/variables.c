@@ -4,19 +4,18 @@
 #include <regex.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <ctype.h>
 
 #include "variables.h"
 #include "errors.h"
 #include "matcher.h"
 
-shell_var *shell_variables;
-
-int init_shell_vars(char *shell, char **envp)
+shell_var *init_shell_vars(char *shell, char **envp)
 {
-    shell_variables = (shell_var *) malloc(sizeof(shell_var) * MAX_VARIABLES);
+    shell_var *var_map = (shell_var *) malloc(sizeof(shell_var) * MAX_VARIABLES);
 
-    if(shell_variables == NULL)
-        return ERR_INIT;
+    if(var_map == NULL)
+        return NULL;
 
     // Initialising all environment variables as shell variables
     char name[MAX_VAR_NAME_STRLEN];
@@ -24,9 +23,9 @@ int init_shell_vars(char *shell, char **envp)
 
     while(*envp != NULL){
         if(var_assignment(*envp, name, value) != 0)
-            return ERR_INIT;
+            return NULL;
         
-        insert_shell_var(name, value, true);
+        insert_shell_var(var_map, name, value, true);
         
         envp++;
     }
@@ -36,7 +35,7 @@ int init_shell_vars(char *shell, char **envp)
 
     if((path = getenv("PATH")) == NULL){
         path = "/bin";
-        insert_shell_var("PATH", path, true);
+        insert_shell_var(var_map, "PATH", path, true);
     }
 
     // Setting USER and HOME variables
@@ -48,31 +47,31 @@ int init_shell_vars(char *shell, char **envp)
     user = pass->pw_name;
     home = pass->pw_dir;
 
-    insert_shell_var( "USER", user, true);
-    insert_shell_var("HOME", home, true);
+    insert_shell_var(var_map, "USER", user, true);
+    insert_shell_var(var_map, "HOME", home, true);
 
     // Setting TERMINAL variable
     char *terminal_name = ttyname(STDOUT_FILENO);
-    insert_shell_var("TERMINAL", terminal_name, true);
+    insert_shell_var(var_map, "TERMINAL", terminal_name, true);
 
     // Setting CWD variable
     char cwd[MAX_VAR_VALUE_STRLEN];
     getcwd(cwd, MAX_VAR_VALUE_STRLEN);
-    insert_shell_var("CWD", cwd, true);
+    insert_shell_var(var_map, "CWD", cwd, true);
 
     // Setting SHELL variable
-    insert_shell_var("SHELL", shell, true);
+    insert_shell_var(var_map, "SHELL", shell, true);
 
     // Setting PROMPT variable
-    insert_shell_var("PROMPT", PROMPT, true);
+    insert_shell_var(var_map, "PROMPT", PROMPT, true);
 
     // Setting EXITCODE variable
-    insert_shell_var("EXITCODE", "0", true);
+    insert_shell_var(var_map, "EXITCODE", "0", true);
          
-    return OK;    
+    return var_map;    
 }
 
-int expand_var(char* input, char* result)
+int expand_var(shell_var *var_map, char* input, char* result)
 {
     // Incrementing pointer to remove the $
     input++;
@@ -92,8 +91,18 @@ int expand_var(char* input, char* result)
 
         int index = strlen(var_name) - strlen(extra_chars);
         var_name[index] = '\0';
+
+        // Incrementing to remove the '}'
+        extra_chars++;
     } else if (check_match(input, NOT_ENCLOSED_PATTERN) == MATCH){
-        strcpy(var_name, input);
+        int i = 0;
+        while(is_var_name_char(*input)){
+            var_name[i] = *input;
+            i++;
+            input++;
+        }
+
+        extra_chars = input;
     } else {
         strcpy(result, "missing or extra, \'{\' \'}\'");
 
@@ -101,13 +110,13 @@ int expand_var(char* input, char* result)
     }
 
     if(is_var_name_valid(var_name)){
-        char* value = get_shell_var(var_name);
+        char* value = get_shell_var(var_map, var_name);
 
         if(value != NULL)
             strcpy(result, value);
 
         if(extra_chars != NULL)
-            strcat(result, ++extra_chars);
+            strcat(result, extra_chars);
     } else {
         strcpy(result, "variable name is not valid");
 
@@ -115,6 +124,20 @@ int expand_var(char* input, char* result)
     }
 
     return OK;
+}
+
+void update_cwd(shell_var *var_map, char *dir)
+{
+    insert_shell_var(var_map, "CWD", dir, true);
+    insert_shell_var(var_map, "PWD", dir, true);
+}
+
+bool is_var_name_char(char character)
+{
+    if(isalnum(character) || character == '_')
+        return true;
+    else 
+        return false;
 }
 
 int var_assignment(char *assignment, char *var_name, char *var_value)
@@ -140,80 +163,85 @@ bool is_var_name_valid(char* name)
         return false;
 }
 
-void showvar(char *name)
+void showvar(shell_var *var_map, char *name)
 {   
     if(name != NULL){
-        char *value = get_shell_var(name);
+        char *value = get_shell_var(var_map, name);
         if(value != NULL)
             printf("%s=%s\n", name, value);
     } else {
         for(int i=0; i < MAX_VARIABLES; i++)
-            if(shell_variables[i].name != NULL)
-                printf("%s=%s\n", shell_variables[i].name, shell_variables[i].value);
+            if(var_map[i].name != NULL)
+                printf("%s=%s\n", var_map[i].name, var_map[i].value);
     }
 }
 
-int export_shell_var(char *name)
-{
-    return update_shell_var(-1, name, NULL, true);
-}
-
-void destroy_shell_vars()
-{
-    free(shell_variables);
-}
-
-int update_shell_var(int index, char *name, char *value, bool is_env)
-{
-    if(index == -1){
-        int hash_index = get_hashcode(name);
-        int i = hash_index;
-
-        while(shell_variables[i].name != NULL){
-            // If the correct index is found break from loop
-            if(strcmp(shell_variables[i].name, name) == 0){
-                index = i;
-                break;
-            }
-
-            i++;
-
-            // Wrap around if the end of the hashtable is reached
-            if(i == MAX_VARIABLES)
-                i = 0;
-            // This would mean that all elements were traversed and the variable was not found
-            if(i == hash_index)
-                return -1;
-        }
+void showenv(shell_var *var_map, char *name)
+{   
+    if(name != NULL){
+        printf("%s=%s\n", name, getenv(name));
+    } else {
+        for(int i=0; i < MAX_VARIABLES; i++)
+            if(var_map[i].name != NULL && var_map[i].is_env)
+                printf("%s=%s\n", var_map[i].name, var_map[i].value);
     }
-
-    // This would mean that the variable with the given name was not found after the search
-    if(index == -1)
-        return ERR_SET;
-
-    // If value is NULL, it means the calling function was export   
-    if(value != NULL){
-        shell_variables[index].value = (char *) realloc(shell_variables[index].value, strlen(value) + 1);
-        strcpy(shell_variables[index].value, value);
-    }
-    shell_variables[index].is_env = is_env;
-
-    if(shell_variables[index].is_env) 
-        if(setenv(shell_variables[index].name, shell_variables[index].value, 1) != 0)
-            return ERR_SET;    
-
-    return OK;
 }
 
-int insert_shell_var(char *name, char* value, bool is_env)
+int export_shell_var(shell_var *var_map, char *name)
 {
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(shell_variables[i].name != NULL){
+    while(var_map[i].name != NULL){
+        if(strcmp(var_map[i].name, name) == 0){        
+            if(setenv(var_map[i].name, var_map[i].value, 1) != 0)
+                return ERR_SET;
+            else
+                var_map[i].is_env = true;
+
+            return OK;
+        }
+
+        i++;
+
+        // Wrap around if the end of the hashtable is reached
+        if(i == MAX_VARIABLES)
+            i = 0;
+        // This would mean that all elements were traversed and the variable was not found
+        if(i == hash_index)
+            return ERR_SET;
+    }
+
+    // This would mean that the variable with the given name was not found after the search
+    return ERR_SET;
+}
+
+void destroy_shell_vars(shell_var *var_map)
+{
+    free(var_map);
+}
+
+int update_shell_var(shell_var *var_map, int index, char *value)
+{
+    var_map[index].value = (char *) realloc(var_map[index].value, strlen(value) + 1);
+    strcpy(var_map[index].value, value);
+
+    if(var_map[index].is_env) 
+        if(setenv(var_map[index].name, var_map[index].value, 1) != 0)
+            return ERR_SET;   
+
+    return OK;
+}
+
+int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
+{
+    int hash_index = get_hashcode(name);
+    int i = hash_index;
+
+    while(var_map[i].name != NULL){
         // If a variable with that name already exists, update its contents
-        if(strcmp(shell_variables[i].name, name) == 0)
-            return update_shell_var(i, name, value, shell_variables[i].is_env);
+        if(strcmp(var_map[i].name, name) == 0)
+            return update_shell_var(var_map, i, value);
 
         i++;
 
@@ -225,38 +253,38 @@ int insert_shell_var(char *name, char* value, bool is_env)
             return ERR_SET;
     }
 
-    shell_variables[i].name = (char *) malloc(strlen(name) + 1);
-    shell_variables[i].value = (char *) malloc(strlen(value) + 1);
+    var_map[i].name = (char *) malloc(strlen(name) + 1);
+    var_map[i].value = (char *) malloc(strlen(value) + 1);
 
     // Return if memory wasn't allocated properly
-    if(shell_variables[i].name == NULL || shell_variables[i].value == NULL)
+    if(var_map[i].name == NULL || var_map[i].value == NULL)
         return ERR_SET;
 
-    strcpy(shell_variables[i].name, name);
-    strcpy(shell_variables[i].value, value);
-    shell_variables[i].is_env = is_env;
+    strcpy(var_map[i].name, name);
+    strcpy(var_map[i].value, value);
+    var_map[i].is_env = is_env;
 
-    if(shell_variables[i].is_env) 
-        if(setenv(shell_variables[i].name, shell_variables[i].value, 1) != 0)
+    if(var_map[i].is_env) 
+        if(setenv(var_map[i].name, var_map[i].value, 1) != 0)
             return ERR_SET;    
 
     return OK;
 }
 
-int remove_shell_var(char *name)
+int remove_shell_var(shell_var *var_map, char *name)
 {
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(shell_variables[i].name != NULL){
-        if(strcmp(shell_variables[i].name, name) == 0){
-            free(shell_variables[i].name);
-            free(shell_variables[i].value);
+    while(var_map[i].name != NULL){
+        if(strcmp(var_map[i].name, name) == 0){
+            free(var_map[i].name);
+            free(var_map[i].value);
 
-            shell_variables[i].name == NULL;
-            shell_variables[i].value == NULL;
+            var_map[i].name == NULL;
+            var_map[i].value == NULL;
 
-            if(shell_variables[i].is_env)
+            if(var_map[i].is_env)
                 unsetenv(name);
 
             return OK;
@@ -274,17 +302,17 @@ int remove_shell_var(char *name)
     }
 
     // This would mean we have encountered an empty element after the given index but the var name was not found
-    return -1;
+    return ERR_UNSET;
 }
 
-char *get_shell_var(char *name)
+char *get_shell_var(shell_var *var_map, char *name)
 {
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(shell_variables[i].name != NULL){
-        if(strcmp(shell_variables[i].name, name) == 0)
-            return shell_variables[i].value;
+    while(var_map[i].name != NULL){
+        if(strcmp(var_map[i].name, name) == 0)
+            return var_map[i].value;
         
         i++;
 

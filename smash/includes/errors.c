@@ -27,7 +27,7 @@ void print_error(int err_code, char *err_cause)
         case ERR_DIR:
             strcpy(err_msg, "DIRECTORY ERROR");
             break;
-        case ERR_FILE:
+        case ERR_FILE_NOT_FOUND:
             strcpy(err_msg, "FILE ERROR");
             break;
         default:

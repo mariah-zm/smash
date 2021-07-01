@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tokeniser.h"
+#include "parser.h"
 #include "dirstack.h"
 
 #define EXIT 0
@@ -16,12 +16,14 @@
 #define SOURCE 10
 #define EXTERNAL 11
 
-int which_command(token_t command);
+void execute(token_t *tokens, int start, int end, dirnode *head, shell_var *shell_variables);
 
-void execute(int command, token_t *tokens, int start, int end);
+void execute_source(char *file_name, dirnode *head, shell_var *shell_variables);
+
+int which_command(token_t command);
 
 void echo(token_t *tokens, int start, int end);
 
-bool cd(dirnode **head, char *directory);
+void external(token_t *tokens, int start, int end);
 
-void source(char *file_name);
+bool cd(dirnode **head, char *directory);

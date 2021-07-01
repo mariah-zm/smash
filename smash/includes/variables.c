@@ -243,11 +243,8 @@ int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
         if(strcmp(var_map[i].name, name) == 0)
             return update_shell_var(var_map, i, value);
 
-        i++;
+        i = (i+1)%MAX_VARIABLES;
 
-        // Wrap around if the end of the hashtable is reached
-        if(i == MAX_VARIABLES)
-            i = 0;
         // This would mean the hash table is full
         if(i == hash_index)
             return ERR_SET;
@@ -290,11 +287,7 @@ int remove_shell_var(shell_var *var_map, char *name)
             return OK;
         }
 
-        // Wrap around
-        if(i+1 == MAX_VARIABLES)
-            i=0;
-        else 
-            i++;
+        i = (i+1)%MAX_VARIABLES;
         
         // This would mean that all elements were traversed and the variable was not found
         if(i == hash_index)
@@ -314,11 +307,7 @@ char *get_shell_var(shell_var *var_map, char *name)
         if(strcmp(var_map[i].name, name) == 0)
             return var_map[i].value;
         
-        i++;
-
-        // Wrap around if at the end of hashtable
-        if(i == MAX_VARIABLES)
-            i=0;
+        i = (i+1)%MAX_VARIABLES;
         
         // This would mean that we've traversed all elements and did not find the wanted var name
         if(i == hash_index)

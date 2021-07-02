@@ -14,6 +14,9 @@ void parse(char *line, dirnode *head, shell_var *shell_variables)
     int return_code;
     token_t tokens[MAX_NUM_TOKENS];
 
+    if(strcmp(line, "") == 0)
+        return;
+
     if(strchr(line, '\"') != NULL && check_match(line, QUOTATION_PATTERN) == NOMATCH)
         print_error(ERR_INVALID_SYNTAX, "missing \"");
     else {

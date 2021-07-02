@@ -20,10 +20,16 @@ void execute(token_t *tokens, int start, int end, dirnode *head, shell_var *shel
 
 void execute_source(char *file_name, dirnode *head, shell_var *shell_variables);
 
+void fork_plus_exec(char *command, char **args, char **env);
+
+char **build_env(shell_var *shell_variables, int *count);
+
+void destroy_env(char **env, int count);
+
 int which_command(token_t command);
 
 void echo(token_t *tokens, int start, int end);
 
-void external(token_t *tokens, int start, int end);
+int external(token_t *tokens, int token_count, shell_var *shell_variables);
 
 bool cd(dirnode **head, char *directory);

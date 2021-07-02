@@ -1,7 +1,7 @@
+#include "errors.h"
+
 #include <string.h>
 #include <stdio.h>
-
-#include "errors.h"
 
 void print_error(int err_code, char *err_cause)
 {

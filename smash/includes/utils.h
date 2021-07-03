@@ -16,3 +16,12 @@
 #define NOMATCH 0
 
 int check_match(char* input, char* pattern);
+
+void quote_removal(token_t tokens[MAX_NUM_TOKENS], int token_count);
+
+bool is_assignment(char *string);
+
+bool is_metachar_or_control_op(char *string);
+
+void remove_char(char*string, char to_remove);
+

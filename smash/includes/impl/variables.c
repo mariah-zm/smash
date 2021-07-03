@@ -6,9 +6,9 @@
 #include <pwd.h>
 #include <ctype.h>
 
-#include "variables.h"
-#include "errors.h"
-#include "matcher.h"
+#include "../variables.h"
+#include "../errors.h"
+#include "../matcher.h"
 
 shell_var *init_shell_vars(char *shell, char **envp)
 {

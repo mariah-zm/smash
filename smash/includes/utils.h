@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "tokeniser.h"
+
 // Input syntax patterns
 #define QUOTATION_PATTERN "(^[^\"]*[\"][^\"]*[\"][^\"]*$)+"
 #define VAR_NAME_PATTERN "^[a-zA-Z_][a-zA-Z0-9_]*$"

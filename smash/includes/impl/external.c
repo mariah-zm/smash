@@ -58,7 +58,7 @@ int external(token_t *tokens, int token_count, shell_var *shell_variables)
     }
     args[j] = NULL;
 
-    fork_plus_exec(args[0], args, env);
+    fork_plus_exec(command_binary, args, env);
 
     destroy_env(env, env_count);
 
@@ -70,7 +70,7 @@ void fork_plus_exec(char *command, char **args, char **env)
     pid_t pid = fork();
 
     if(pid == 0){
-        if (execve(args[0], args, env))
+        if (execve(command, args, env))
         {
             print_error(ERR_GENERIC, "execve failed");
             // calling _Exit to avoid exithandler

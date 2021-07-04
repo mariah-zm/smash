@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "../redirection.h"
+
 int which_command(token_t command)
 {
     if(strcmp(command, "echo") == 0)
@@ -33,12 +35,17 @@ int which_command(token_t command)
 
 void echo(token_t *tokens, int start, int end)
 {
-    for(int i = start; i <= end; i++)
-    {
-        printf("%s ", tokens[i]);
-    }
+    if(!is_inredir()){
+        for(int i = start; i <= end; i++)
+            printf("%s ", tokens[i]);
+        
+        printf("\n");
+    } else {
+        char line[MAX_TOKEN_STRLEN];
 
-    printf("\n");
+        while(fgets(line, MAX_TOKEN_STRLEN, stdin)!= NULL)
+            printf("%s", line);
+    }
 }
 
 

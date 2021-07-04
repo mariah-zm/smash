@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tokeniser.h"
+#include "variables.h"
 
 int external(token_t *tokens, int token_count, shell_var *shell_variables);
 

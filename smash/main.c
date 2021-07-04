@@ -9,11 +9,13 @@
 #include "includes/internal.h"
 #include "includes/utils.h"
 #include "includes/external.h"
+#include "includes/redirection.h"
 
 shell_var *shell_variables;
 dirnode *head;
 
-void parse(char *line);
+int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count);
+void parse(token_t tokens[MAX_NUM_TOKENS], int token_count);
 int variable_expansion(token_t tokens[MAX_NUM_TOKENS], int token_count);
 int expand(char* string);
 void execute(token_t *tokens, int start, int end);
@@ -50,7 +52,15 @@ int main(int argc, char **argv, char **envp)
             break;
         }
 
-        parse(line);
+        token_t tokens[MAX_NUM_TOKENS]; 
+        int token_count = 0;
+
+        if(prepare(line, tokens, &token_count) == OK) {
+            parse(tokens, token_count);
+
+            reset(STDIN);
+            reset(STDOUT);
+        }
 
         // Freeing memory allocated by linenoise using linenoise
         linenoiseFree(line);
@@ -61,23 +71,18 @@ int main(int argc, char **argv, char **envp)
     return OK;
 }
 
-void parse(char *line)
+int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count)
 {
-    int return_code;
-    token_t tokens[MAX_NUM_TOKENS]; 
-
-    if(strchr(line, '\"') != NULL && check_match(line, QUOTATION_PATTERN) == NOMATCH)
+    if(strchr(line, '\"') != NULL && check_match(line, QUOTATION_PATTERN) == NOMATCH){
         print_error(ERR_INVALID_SYNTAX, "missing \"");
-    else {
-        int token_count = 0;
-        int *count_ptr = &token_count;
+        return ERR_INVALID_SYNTAX;
+    } else {
+        tokenise(tokens, line, token_count, 0);
 
-        tokenise(tokens, line, count_ptr, 0);
-
-        if(variable_expansion(tokens, token_count) == ERR_INVALID_SYNTAX)
-            return;
+        if(variable_expansion(tokens, *token_count) == ERR_INVALID_SYNTAX)
+            return ERR_INVALID_SYNTAX; // Error message already printed
         
-        quote_removal(tokens, token_count);
+        quote_removal(tokens, *token_count);
 
         // It is not allowed for the first token to be a metachar or control operator
         if(is_metachar_or_control_op(tokens[0])){
@@ -85,31 +90,67 @@ void parse(char *line)
             strcat(msg, tokens[0]);
             strcat(msg,  "\'");
             print_error(ERR_INVALID_SYNTAX, msg);
-        } else {
-
+            return ERR_INVALID_SYNTAX;
         }
-        
-        if(check_match(tokens[0], ASSIGNMENT_PATTERN) == MATCH){
-            char name[MAX_VAR_NAME_STRLEN];
-            char value[MAX_VAR_VALUE_STRLEN];
+    }
 
-            if(var_assignment(tokens[0], name, value) == ERR_INVALID_SYNTAX) 
-                print_error(ERR_INVALID_SYNTAX, NULL);
-            else
-                insert_shell_var(shell_variables, name, value, false);
+    return OK;
+}
+
+void parse(token_t tokens[MAX_NUM_TOKENS], int token_count)
+{
+    if(check_match(tokens[0], ASSIGNMENT_PATTERN) == MATCH){
+        char name[MAX_VAR_NAME_STRLEN];
+        char value[MAX_VAR_VALUE_STRLEN];
+
+        if(var_assignment(tokens[0], name, value) == ERR_INVALID_SYNTAX) 
+            print_error(ERR_INVALID_SYNTAX, NULL);
+        else
+            insert_shell_var(shell_variables, name, value, false);
         
-        } else {
+    } else {
+        int in_redir, out_redir, pipe;
+
+        if((out_redir = out_pos(tokens, token_count)) > 0){
+            if(out_redir == token_count-1)
+                print_error(ERR_INVALID_SYNTAX, "syntax error near unexpected token \'newline\'");
+            else {
+                int ret_code; 
+
+                if(strcmp(tokens[out_redir+1], ">") == 0)
+                    if(out_redir+1 == token_count-1)
+                        print_error(ERR_INVALID_SYNTAX, "syntax error near unexpected token \'newline\'");
+                    else
+                        ret_code = redir_out(tokens, out_redir, APPEND);
+                else 
+                    ret_code = redir_out(tokens, out_redir, OVERWRITE);
+
+                if(ret_code == OK){
+                    parse(tokens, out_redir);
+                } else
+                    print_error(ret_code, "error redirecting");
+            }
+        } else if((in_redir = in_pos(tokens, token_count)) > 0){
+            if(in_redir == token_count-1)
+                print_error(ERR_INVALID_SYNTAX, "syntax error near unexpected token \'newline\'");
+            else {
+                if(redir_in(tokens, in_redir) ==  OK)
+                    parse(tokens, in_redir);
+                else                         
+                    print_error(ERR_FILE_NOT_FOUND, "error redirecting");
+            }
+        } 
+
+        // if contains pipe
+        // handle pipe:
+            
+        if(in_redir == -1 && out_redir == -1)
             execute(tokens, 0, token_count-1);
-        }
     }
 }
 
 int variable_expansion(token_t tokens[MAX_NUM_TOKENS], int token_count)
 {   
-    int ret_code;
-    char *start_ptr, *end_ptr;
-    char result[MAX_VAR_VALUE_STRLEN];
-
     for(int i=0; i < token_count; i++){
         if(expand(tokens[i]) == ERR_INVALID_SYNTAX)
             return ERR_INVALID_SYNTAX;
@@ -248,10 +289,14 @@ void source(char *file_name)
         strcat(err_msg, file_name);
         print_error(ERR_FILE_NOT_FOUND, err_msg);
     } else {
-        token_t line;
+        char *line;
 
-        while(fgets(line, MAX_TOKEN_STRLEN, fp) != NULL)
-            parse(line);
+        while(fgets(line, MAX_TOKEN_STRLEN, fp) != NULL){
+            token_t tokens[MAX_NUM_TOKENS];
+            int token_count;
+            if(prepare(line, tokens, &token_count) == OK)
+                parse(tokens, token_count);
+        }
 
         if (fclose(fp) != 0)
             print_error(ERR_FILE_NOT_FOUND, "error closing file");

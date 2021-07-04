@@ -1,4 +1,4 @@
-#include "../matcher.h"
+#include "../utils.h"
 
 #include <regex.h>
 #include <stddef.h>
@@ -25,11 +25,11 @@ int check_match(char *input, char *pattern)
         return NOMATCH;
 }
 
-void quote_removal(char **strings, int count)
+void quote_removal(token_t tokens[MAX_NUM_TOKENS], int token_count)
 {   
-    for(int i=0; i < count; i++){
-        remove_char(strings[i], '\"');
-        remove_char(strings[i], '\\');
+    for(int i=0; i < token_count; i++){
+        remove_char(tokens[i], '\"');
+        remove_char(tokens[i], '\\');
     }
 }
 

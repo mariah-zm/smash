@@ -6,8 +6,7 @@
 #include <regex.h>
 
 #include "../errors.h"
-#include "../matcher.h"
-#include "../executer.h"
+#include "../utils.h"
 
 void tokenise(token_t *tokens, char* input, int* index, int delim_level)
 {   

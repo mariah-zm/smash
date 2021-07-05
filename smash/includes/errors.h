@@ -12,6 +12,7 @@
 #define ERR_DIR 8
 #define ERR_FILE_NOT_FOUND 9
 #define ERR_FILE_EMPTY 10
+#define ERR_PIPE 11
 
 void print_error(int err_code, char *err_cause);
 

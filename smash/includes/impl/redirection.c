@@ -3,33 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <wait.h>
 
 #include "../errors.h"
 
 int saved_stdin, saved_stdout;
 bool changed_in, changed_out;
-
-int in_pos(token_t *tokens, int count)
-{
-    for(int i=0; i < count; i++){
-        if(strcmp(tokens[i], "<") == 0){
-            return i;
-        }
-    }
-
-    return -1;
-}
-
-int out_pos(token_t *tokens, int count){
-        for(int i=0; i < count; i++){
-        if(strcmp(tokens[i], ">") == 0){
-            return i;
-        }
-    }
-
-    return -1;
-}
 
 void reset(int stream)
 {
@@ -53,7 +31,7 @@ int redir_in(token_t *tokens, int in_pos)
     fd = open(file_name, O_RDONLY, S_IRUSR);
 
     if (fd < 0)
-        return ERR_GENERIC;
+        return ERR_FILE_NOT_FOUND;
 
     saved_stdin = dup(0);
 
@@ -79,7 +57,7 @@ int redir_out(token_t *tokens, int out_pos, int write_flag)
     }
 
     if (fd < 0)
-        return ERR_GENERIC;
+        return ERR_FILE_NOT_FOUND;
 
     saved_stdout = dup(1);
 

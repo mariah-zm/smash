@@ -73,3 +73,14 @@ void remove_char(char *string, char to_remove)
     // Recursive call
     remove_char(string, to_remove);
 }
+
+int get_pos(token_t *tokens, int token_count, char *symbol)
+{
+    for(int i=0; i < token_count; i++){
+        if(strcmp(tokens[i], symbol) == 0){
+            return i;
+        }
+    }
+
+    return -1;
+}

@@ -27,3 +27,5 @@ bool is_metachar_or_control_op(char *string);
 
 void remove_char(char*string, char to_remove);
 
+int get_pos(token_t *tokens, int token_count, char *symbol);
+

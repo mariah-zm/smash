@@ -21,6 +21,9 @@ void print_error(int err_code, char *err_cause)
         case ERR_INVALID_SYNTAX:
             strcpy(err_msg, "INVALID SYNTAX");
             break;
+        case ERR_UNKNOWN_COMMAND:
+            strcpy(err_msg, "UNKNOWN COMMAND");
+            break;
         case ERR_ARGS:
             strcpy(err_msg, "ARGUMENTS ERROR");
             break;
@@ -28,7 +31,11 @@ void print_error(int err_code, char *err_cause)
             strcpy(err_msg, "DIRECTORY ERROR");
             break;
         case ERR_FILE_NOT_FOUND:
+        case ERR_FILE_EMPTY:
             strcpy(err_msg, "FILE ERROR");
+            break;
+        case ERR_PIPE:
+            strcpy(err_msg, "PIPELINE ERROR");
             break;
         default:
             strcpy(err_msg, "ERROR");
@@ -45,7 +52,7 @@ void exit_shell(int err_code, void *ptr)
     switch(err_code)
     {
         case ERR_INIT:
-            fprintf(stderr, "Failed to initialise shell variables.\n");
+            fprintf(stderr, "INITIALISATION ERROR: Failed to initialise shell variables.\n");
             break;
         case OK:
             printf("\n");

@@ -25,7 +25,7 @@ int check_match(char *input, char *pattern)
         return NOMATCH;
 }
 
-void quote_removal(token_t tokens[MAX_NUM_TOKENS], int token_count)
+void quote_removal(token_t *tokens, int token_count)
 {   
     for(int i=0; i < token_count; i++){
         remove_char(tokens[i], '\"');

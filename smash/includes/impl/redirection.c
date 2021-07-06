@@ -71,8 +71,5 @@ int redir_out(token_t *tokens, int out_pos, int write_flag)
 
 bool is_inredir()
 {
-    if(saved_stdin == 0)
-        return false;
-    else
-        return true;
+    return changed_in;
 }

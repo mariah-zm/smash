@@ -163,59 +163,6 @@ bool is_var_name_valid(char* name)
         return false;
 }
 
-void showvar(shell_var *var_map, char *name)
-{   
-    if(name != NULL){
-        char *value = get_shell_var(var_map, name);
-        if(value != NULL)
-            printf("%s=%s\n", name, value);
-    } else {
-        for(int i=0; i < MAX_VARIABLES; i++)
-            if(var_map[i].name != NULL)
-                printf("%s=%s\n", var_map[i].name, var_map[i].value);
-    }
-}
-
-void showenv(shell_var *var_map, char *name)
-{   
-    if(name != NULL){
-        printf("%s=%s\n", name, getenv(name));
-    } else {
-        for(int i=0; i < MAX_VARIABLES; i++)
-            if(var_map[i].name != NULL && var_map[i].is_env)
-                printf("%s=%s\n", var_map[i].name, var_map[i].value);
-    }
-}
-
-int export_shell_var(shell_var *var_map, char *name)
-{
-    int hash_index = get_hashcode(name);
-    int i = hash_index;
-
-    while(var_map[i].name != NULL){
-        if(strcmp(var_map[i].name, name) == 0){        
-            if(setenv(var_map[i].name, var_map[i].value, 1) != 0)
-                return ERR_SET;
-            else
-                var_map[i].is_env = true;
-
-            return OK;
-        }
-
-        i++;
-
-        // Wrap around if the end of the hashtable is reached
-        if(i == MAX_VARIABLES)
-            i = 0;
-        // This would mean that all elements were traversed and the variable was not found
-        if(i == hash_index)
-            return ERR_SET;
-    }
-
-    // This would mean that the variable with the given name was not found after the search
-    return ERR_SET;
-}
-
 void destroy_shell_vars(shell_var *var_map)
 {
     free(var_map);
@@ -266,36 +213,6 @@ int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
             return ERR_SET;    
 
     return OK;
-}
-
-int remove_shell_var(shell_var *var_map, char *name)
-{
-    int hash_index = get_hashcode(name);
-    int i = hash_index;
-
-    while(var_map[i].name != NULL){
-        if(strcmp(var_map[i].name, name) == 0){
-            free(var_map[i].name);
-            free(var_map[i].value);
-
-            var_map[i].name == NULL;
-            var_map[i].value == NULL;
-
-            if(var_map[i].is_env)
-                unsetenv(name);
-
-            return OK;
-        }
-
-        i = (i+1)%MAX_VARIABLES;
-        
-        // This would mean that all elements were traversed and the variable was not found
-        if(i == hash_index)
-            break;
-    }
-
-    // This would mean we have encountered an empty element after the given index but the var name was not found
-    return ERR_UNSET;
 }
 
 char *get_shell_var(shell_var *var_map, char *name)

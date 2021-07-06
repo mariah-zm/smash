@@ -29,7 +29,7 @@ int main(int argc, char **argv, char **envp)
     // Get input and echo here
     char *line;
 
-
+    // Registering error handler
     if (on_exit(exit_shell, NULL))
         perror("Cannot register exit handler\n");
 
@@ -70,6 +70,7 @@ int main(int argc, char **argv, char **envp)
     }
 
     destroy_shell_vars(shell_variables);
+    free_dirs(&head);
     
     return OK;
 }
@@ -202,13 +203,26 @@ void execute(token_t *tokens, int start, int end)
     // Incrementing start pointer to skip command
     start++;
 
+    token_t line;
+    bool redir = false;
+
+    if((redir = is_inredir()) && command != ECHO) {
+        fgets(line, MAX_TOKEN_STRLEN, stdin);
+        if(line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = '\0';
+        
+        strcpy(tokens[1], line);
+
+        reset(STDIN);
+    }
+
     switch(command){
         case ECHO:
             echo(tokens, start, end);
             break;
 
         case CD:
-            if(end != start)
+            if(!redir && end != start)
                 print_error(ERR_ARGS, "expected 1 argument");
             else
                 if(cd(&head, tokens[1])){
@@ -221,7 +235,9 @@ void execute(token_t *tokens, int start, int end)
             break;
 
         case SHOWVAR:
-            if(end == 0)
+            if(redir)
+                showvar(shell_variables, tokens[1]);
+            else if(end == 0)
                 showvar(shell_variables, NULL);
             else if(end == start)
                 showvar(shell_variables, tokens[1]);
@@ -230,32 +246,32 @@ void execute(token_t *tokens, int start, int end)
             break;
 
         case EXPORT:
-            if(end != start)
+            if(!redir && end != start)
                 print_error(ERR_ARGS, "expected 1 argument");
             else
-                export_shell_var(shell_variables, tokens[1]);
+                export(shell_variables, tokens[1]);
             break;
 
         case UNSET:
-            if(end != start)
+            if(!redir && end != start)
                 print_error(ERR_ARGS, "expected 1 argument");
             else
-                remove_shell_var(shell_variables, tokens[1]);
+                unset(shell_variables, tokens[1]);
             break;
 
         case SHOWENV:
-            if(end == 0)
+            if(!redir && end == 0)
                 showenv(shell_variables, NULL);
-            else if(end == start)
+            else if(!redir && end == start)
                 showenv(shell_variables, tokens[1]);
             else 
                 print_error(ERR_ARGS, "expected less than 1 arguments");
             break;
 
         case PUSHD:
-            if(end != start)
+            if(!redir & end != start) 
                 print_error(ERR_ARGS, "expected 1 argument");
-            else{
+            else
                 if(pushdir(&head, tokens[1])){
                     update_cwd(shell_variables, head->dir);
                     dirs(head);
@@ -264,7 +280,6 @@ void execute(token_t *tokens, int start, int end)
                     strcat(err_msg, tokens[1]);
                     print_error(ERR_DIR, err_msg);
                 }
-            }
             break;
 
         case POPD:
@@ -285,10 +300,11 @@ void execute(token_t *tokens, int start, int end)
             break;
 
         case SOURCE:
-            if(end != start)
+            if(!redir && end != start) 
                 print_error(ERR_ARGS, "expected 1 argument");
-            else
+            else 
                 source(tokens[1]);
+            
             break;
 
         case EXTERNAL: 

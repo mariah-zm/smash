@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "tokeniser.h"
+#include "variables.h"
 
 #define ECHO 0
 #define CD 1
@@ -27,6 +28,14 @@ void echo(token_t *tokens, int start, int end);
 
 bool cd(dirnode **head, char *directory);
 
+void showvar(shell_var *var_map, char *name);
+
+void showenv(shell_var *var_map, char *name);
+
+int export(shell_var *var_map, char *name);
+
+int unset(shell_var *var_map, char *name);
+
 dirnode *init_dir(char *home);
 
 bool pushdir(dirnode **head, char *directory);
@@ -34,3 +43,5 @@ bool pushdir(dirnode **head, char *directory);
 void popdir(dirnode **head);
 
 void dirs(dirnode *head);
+
+void free_dirs(dirnode **head);

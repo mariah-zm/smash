@@ -206,11 +206,15 @@ void execute(token_t *tokens, int start, int end)
     token_t line;
     bool redir = false;
 
+    // If input is redirected, the first line is read from the file to be given to 
+    // commands which take only one argument
     if((redir = is_inredir()) && command != ECHO) {
-        fgets(line, MAX_TOKEN_STRLEN, stdin);
-        if(line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = '\0';
-        
+        if(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL)
+            if(line[strlen(line)-1] == '\n')
+                line[strlen(line)-1] = '\0';
+        else 
+            print_error(ERR_GENERIC, "error redirecting input");
+
         strcpy(tokens[1], line);
 
         reset(STDIN);
@@ -269,7 +273,7 @@ void execute(token_t *tokens, int start, int end)
             break;
 
         case PUSHD:
-            if(!redir & end != start) 
+            if(!redir && end != start) 
                 print_error(ERR_ARGS, "expected 1 argument");
             else
                 if(pushdir(&head, tokens[1])){

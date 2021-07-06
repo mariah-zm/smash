@@ -44,8 +44,9 @@ void echo(token_t *tokens, int start, int end)
     } else {
         char line[MAX_TOKEN_STRLEN];
 
-        while(fgets(line, MAX_TOKEN_STRLEN, stdin)!= NULL)
+        while(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL){
             printf("%s", line);
+        }
     }
 }
 

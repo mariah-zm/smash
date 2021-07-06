@@ -1,4 +1,4 @@
-#include "tokeniser.h"
+#include "../tokeniser.h"
 
 #include <stdio.h>
 #include <stdlib.h>

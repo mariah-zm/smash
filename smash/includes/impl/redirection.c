@@ -13,11 +13,9 @@ void reset(int stream)
 {
     if(stream == STDIN && changed_in){
         dup2(saved_stdin, 0);
-        close(saved_stdin);
         changed_in = false;
     } else if(changed_out){
         dup2(saved_stdout, 1);
-        close(saved_stdout);
         changed_out = false;
     }
 }

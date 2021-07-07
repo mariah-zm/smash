@@ -16,12 +16,58 @@
 shell_var *shell_variables;
 dirnode *head;
 
+/**
+ * Prepares the user input for parsing and execution by doing validation and tokenisation.
+ * @param line the raw user input
+ * @param tokens the input tokenised in a 2d array
+ * @param token_count the number of non-empty tokens in the array
+ * @returns 0 if syntax is valid and input was prepared successful, respective error code otherwise
+ */ 
 int prepare(char *line, token_t *tokens, int *token_count);
+
+/**
+ * Parses the tokens array recursively until the base case is reached and a command is executed.
+ * @param tokens the input tokenised in a 2d array
+ * @param token_count the number of non-empty tokens in the array
+ */ 
 void parse(token_t *tokens, int token_count);
+
+/**
+ * Expands all variables in the tokens array by looping through the tokens and calling the expans function.
+ * @param tokens the input tokenised in a 2d array
+ * @param token_count the number of non-empty tokens in the array
+ * @returns 0 if syntax is valid and variables in all tokens were expanded successfully, respective error code otherwise
+ */ 
 int variable_expansion(token_t *tokens, int token_count);
-int expand(char *string);
+
+/**
+ * Expands all variables in the given token recursively.
+ * @param token the token to perfoorm variable expansion on
+ * @returns 0 if syntax is valid and variables in token were expanded successfully, respective error code otherwise
+ */ 
+int expand(token_t token);
+
+/**
+ * Executes the command at token[start] with the arguments tokens[start+1] to tokens[end].
+ * @param tokens the input tokenised in a 2d array
+ * @param start the index of the first token in the tokens array to be included in the command 
+ * @param end the index of the last token in the tokens array to be included in the command 
+ */ 
 void execute(token_t *tokens, int start, int end);
+
+/**
+ * Executes all commands found in the given script
+ * @param file_name the name of the script
+ */ 
 void source(char *file_name);
+
+/**
+ * Performs pipelining.
+ * @param tokens the input tokenised in a 2d array
+ * @param pipe_pos the index of the pipe token in tokens
+ * @param token_count the number of non-empty tokens in the array
+ * @returns 0 if commands are piped successfully, respective error code otherwise
+ */ 
 int pipe_command(token_t *tokens, int pipe_pos, int token_count);
 
 int main(int argc, char **argv, char **envp)
@@ -58,7 +104,7 @@ int main(int argc, char **argv, char **envp)
         token_t tokens[MAX_NUM_TOKENS]; 
         int token_count = 0;
 
-        // Parsing only if 
+        // Parsing only if input is valid and tokenisation was sucessful
         if(prepare(line, tokens, &token_count) == OK)
             parse(tokens, token_count);
 
@@ -177,10 +223,10 @@ int variable_expansion(token_t *tokens, int token_count)
     return OK;
 }
 
-int expand(char *string)
+int expand(token_t token)
 {   
     char result[MAX_VAR_VALUE_STRLEN] = "\0";
-    char *start_ptr = strchr(string, '$');
+    char *start_ptr = strchr(token, '$');
 
     // Base case
     if(start_ptr == NULL || is_escaped(start_ptr))
@@ -190,12 +236,12 @@ int expand(char *string)
         print_error(ERR_INVALID_SYNTAX, result);
         return ERR_INVALID_SYNTAX;
     } else {
-        int index = strlen(string) - strlen(start_ptr);
-        string[index] = '\0';
-        strcat(string, result);
+        int index = strlen(token) - strlen(start_ptr);
+        token[index] = '\0';
+        strcat(token, result);
 
         // Recursive case
-        return expand(string);
+        return expand(token);
     }
 }
 

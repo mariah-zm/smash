@@ -82,7 +82,9 @@ void showvar(shell_var *var_map, char *name)
 void showenv(shell_var *var_map, char *name)
 {   
     if(name != NULL){
-        printf("%s=%s\n", name, getenv(name));
+        char *value;
+        if((value = getenv(name)) != NULL)
+            printf("%s=%s\n", name, value);
     } else {
         for(int i=0; i < MAX_VARIABLES; i++)
             if(var_map[i].name != NULL && var_map[i].is_env)
@@ -95,7 +97,7 @@ int export(shell_var *var_map, char *name)
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(var_map[i].name != NULL){
+    while(strlen(var_map[i].name) != 0){
         if(strcmp(var_map[i].name, name) == 0){        
             if(setenv(var_map[i].name, var_map[i].value, 1) != 0)
                 return ERR_SET;
@@ -124,7 +126,7 @@ int unset(shell_var *var_map, char *name)
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(var_map[i].name != NULL){
+    while(strlen(var_map[i].name) != 0){
         if(strcmp(var_map[i].name, name) == 0){
             strcpy(var_map[i].name, "\0");
             strcpy(var_map[i].value, "\0");
@@ -178,7 +180,7 @@ void popdir(dirnode **head)
 {
     dirnode *new_head = (*head)->next_dir;
 
-    // stack must always contain home directory so we dont pop if end of linked list
+    // Stack must always contain home directory so we dont pop if end of linked list
     if(new_head != NULL){
         free(*head);
         *head = new_head;

@@ -12,10 +12,10 @@ bool changed_in, changed_out;
 void reset(int stream)
 {
     if(stream == STDIN && changed_in){
-        dup2(saved_stdin, 0);
+        dup2(saved_stdin, STDIN_FILENO);
         changed_in = false;
     } else if(changed_out){
-        dup2(saved_stdout, 1);
+        dup2(saved_stdout, STDOUT_FILENO);
         changed_out = false;
     }
 }
@@ -26,12 +26,12 @@ int redir_in(token_t *tokens, int in_pos)
     file_name = tokens[in_pos + 1];
 
     int fd;
-    fd = open(file_name, O_RDONLY | _IONBF, S_IRUSR);
+    fd = open(file_name, O_RDONLY, S_IRUSR);
 
     if (fd < 0)
         return ERR_FILE_NOT_FOUND;
 
-    saved_stdin = dup(0);
+    saved_stdin = dup(STDIN_FILENO);
 
     dup2(fd, STDIN_FILENO);
     close(fd);
@@ -57,7 +57,7 @@ int redir_out(token_t *tokens, int out_pos, int write_flag)
     if (fd < 0)
         return ERR_FILE_NOT_FOUND;
 
-    saved_stdout = dup(1);
+    saved_stdout = dup(STDOUT_FILENO);
 
     dup2(fd, STDOUT_FILENO);
     close(fd);

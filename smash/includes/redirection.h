@@ -12,7 +12,7 @@
 
 /**
  * Resets the given stream to the standard stream.
- * @stream STDIN or STDOUT (see macros above)
+ * @param stream STDIN or STDOUT (see macros above)
  */ 
 void reset(int stream);
 

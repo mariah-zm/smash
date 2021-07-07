@@ -26,14 +26,7 @@ dirnode *head;
 int prepare(char *line, token_t *tokens, int *token_count);
 
 /**
- * Parses the tokens array recursively until the base case is reached and a command is executed.
- * @param tokens the input tokenised in a 2d array
- * @param token_count the number of non-empty tokens in the array
- */ 
-void parse(token_t *tokens, int token_count);
-
-/**
- * Expands all variables in the tokens array by looping through the tokens and calling the expans function.
+ * Expands all variables in the tokens array by looping through the tokens and calling the expand function.
  * @param tokens the input tokenised in a 2d array
  * @param token_count the number of non-empty tokens in the array
  * @returns 0 if syntax is valid and variables in all tokens were expanded successfully, respective error code otherwise
@@ -46,6 +39,13 @@ int variable_expansion(token_t *tokens, int token_count);
  * @returns 0 if syntax is valid and variables in token were expanded successfully, respective error code otherwise
  */ 
 int expand(token_t token);
+
+/**
+ * Parses the tokens array recursively until the base case is reached and a command is executed.
+ * @param tokens the input tokenised in a 2d array
+ * @param token_count the number of non-empty tokens in the array
+ */ 
+void parse(token_t *tokens, int token_count);
 
 /**
  * Executes the command at token[start] with the arguments tokens[start+1] to tokens[end].
@@ -153,12 +153,42 @@ int prepare(char *line, token_t *tokens, int *token_count)
     return OK;
 }
 
+int variable_expansion(token_t *tokens, int token_count)
+{   
+    for(int i=0; i < token_count; i++){
+        if(expand(tokens[i]) == ERR_INVALID_SYNTAX)
+            return ERR_INVALID_SYNTAX;
+    }
+
+    return OK;
+}
+
+int expand(token_t token)
+{   
+    char result[MAX_VAR_VALUE_STRLEN] = "\0";
+    char *start_ptr = strchr(token, '$');
+
+    // Base case
+    if(start_ptr == NULL || is_escaped(start_ptr))
+        return OK;
+
+    if(expand_var(shell_variables, start_ptr, result) == ERR_INVALID_SYNTAX){
+        print_error(ERR_INVALID_SYNTAX, result);
+        return ERR_INVALID_SYNTAX;
+    } else {
+        int index = strlen(token) - strlen(start_ptr);
+        token[index] = '\0';
+        strcat(token, result);
+
+        // Recursive case
+        return expand(token);
+    }
+}
+
 void parse(token_t *tokens, int token_count)
 {
     // Checking if input was an assignment, in which case the variable is set
     if(check_match(tokens[0], ASSIGNMENT_PATTERN) == MATCH){
-        char name[MAX_VAR_NAME_STRLEN];
-        char value[MAX_VAR_VALUE_STRLEN];
 
         if(var_assignment(shell_variables, tokens[0]) == ERR_INVALID_SYNTAX) 
             print_error(ERR_INVALID_SYNTAX, NULL);
@@ -208,38 +238,6 @@ void parse(token_t *tokens, int token_count)
         } else if (token_count != 0){
             execute(tokens, 0, token_count-1);
         }
-    }
-}
-
-int variable_expansion(token_t *tokens, int token_count)
-{   
-    for(int i=0; i < token_count; i++){
-        if(expand(tokens[i]) == ERR_INVALID_SYNTAX)
-            return ERR_INVALID_SYNTAX;
-    }
-
-    return OK;
-}
-
-int expand(token_t token)
-{   
-    char result[MAX_VAR_VALUE_STRLEN] = "\0";
-    char *start_ptr = strchr(token, '$');
-
-    // Base case
-    if(start_ptr == NULL || is_escaped(start_ptr))
-        return OK;
-
-    if(expand_var(shell_variables, start_ptr, result) == ERR_INVALID_SYNTAX){
-        print_error(ERR_INVALID_SYNTAX, result);
-        return ERR_INVALID_SYNTAX;
-    } else {
-        int index = strlen(token) - strlen(start_ptr);
-        token[index] = '\0';
-        strcat(token, result);
-
-        // Recursive case
-        return expand(token);
     }
 }
 

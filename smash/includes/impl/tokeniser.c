@@ -29,6 +29,7 @@ void tokenise(token_t *tokens, char* input, int* index, int delim_level)
     if(contains_delim(delim, input)) {
         char* right = strchr(input, delim);
 
+        // If this particular occurrence is quoted/escaped, go to the next one
         if(is_quoted(input, right)){
             char* next = strchr(right, '\"');
             right = strchr(next, delim);
@@ -61,38 +62,24 @@ void tokenise(token_t *tokens, char* input, int* index, int delim_level)
 
 char get_delim(int delim_lev)
 {
-    char delimeter;
-
     switch(delim_lev){
         case 0:
-            delimeter = ';';
-            break;
+            return ';';
         case 1:
-            delimeter = '|';
-            break;
+            return '|';
         case 2: 
-            delimeter = '>';
-            break;
+            return '>';
         case 3: 
-            delimeter = '<';
-            break;
+            return '<';
         case 4:
-            delimeter = ' ';
-            break;
+            return ' ';
         case 5: 
-            delimeter = '\t';
-            break;
+            return '\t';
     }
-
-    return delimeter;
 }
 
 bool contains_delim(char delimeter, char* string)
 {
-    // Base case
-    if(string == NULL)
-        return false;
-
     char* ptr;
 
     if((ptr = strchr(string, delimeter)) == NULL){

@@ -41,14 +41,14 @@ int expand_var(shell_var *var_map, char *input, char *result);
 void update_cwd(shell_var *var_map, char *dir);
 
 /**
- * Takes a character and returnns whether it is a valid variable name character (a-z, A-Z, _, or 0-9)
+ * Takes a character and returns whether it is a valid variable name character (a-z, A-Z, _, or 0-9)
  * @param character the character to be checked
  * @returns true if a valid variable name character, false otherwise
  */
 bool is_var_name_char(char character);
 
 /**
- * Variable assignment creates a new shell variable or updates an existing.
+ * Variable assignment creates a new shell variable or updates an existing one.
  * @param var_map the map of key-value pairs containing the shell variables
  * @param assignment the variable assignment input in the form of VAR_NAME=VAR_VALUE
  * @returns 0 on success, respective error code otherwise

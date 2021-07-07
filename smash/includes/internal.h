@@ -106,7 +106,7 @@ void popdir(dirnode **head);
 void dirs(dirnode *head);
 
 /**
- * Freess the allocated memory the linked list representing the directory stack.
+ * Frees the memory allocated to the linked list representing the directory stack.
  * @param head a pointer to the head of the list which represents the top of the stack
  */
 void destroy_dirs(dirnode **head);

@@ -14,6 +14,15 @@
 #define ERR_FILE_EMPTY 10
 #define ERR_PIPE 11
 
+/**
+ * The error handler for the shell.
+ * @param err_code the code of the encountered error, corresponds to one of the macros defined above
+ * @param err_cause a short description on what caused the error
+ */  
 void print_error(int err_code, char *err_cause);
 
+/**
+ * The exit handler for the shell.
+ * @param err_code the exit code 
+ */ 
 void exit_shell(int err_code, void *ptr);

@@ -44,4 +44,4 @@ void popdir(dirnode **head);
 
 void dirs(dirnode *head);
 
-void free_dirs(dirnode **head);
+void destroy_dirs(dirnode **head);

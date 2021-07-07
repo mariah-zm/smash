@@ -16,10 +16,10 @@
 shell_var *shell_variables;
 dirnode *head;
 
-int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count);
-void parse(token_t tokens[MAX_NUM_TOKENS], int token_count);
-int variable_expansion(token_t tokens[MAX_NUM_TOKENS], int token_count);
-int expand(char* string);
+int prepare(char *line, token_t *tokens, int *token_count);
+void parse(token_t *tokens, int token_count);
+int variable_expansion(token_t *tokens, int token_count);
+int expand(char *string);
 void execute(token_t *tokens, int start, int end);
 void source(char *file_name);
 int pipe_command(token_t *tokens, int pipe_pos, int token_count);
@@ -70,12 +70,12 @@ int main(int argc, char **argv, char **envp)
     }
 
     destroy_shell_vars(shell_variables);
-    free_dirs(&head);
+    destroy_dirs(&head);
     
     return OK;
 }
 
-int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count)
+int prepare(char *line, token_t *tokens, int *token_count)
 {
     if(strchr(line, '\"') != NULL && check_match(line, QUOTATION_PATTERN) == NOMATCH){
         print_error(ERR_INVALID_SYNTAX, "missing \"");
@@ -90,7 +90,7 @@ int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count)
     quote_removal(tokens, *token_count);
 
     // It is not allowed for the first token to be a metachar or control operator
-    if(is_metachar_or_control_op(tokens[0])){
+    if(is_metachar(tokens[0])){
         char msg[50] = "unexpected token near \'";
         strcat(msg, tokens[0]);
         strcat(msg,  "\'");
@@ -107,7 +107,7 @@ int prepare(char *line, token_t tokens[MAX_NUM_TOKENS], int *token_count)
     return OK;
 }
 
-void parse(token_t tokens[MAX_NUM_TOKENS], int token_count)
+void parse(token_t *tokens, int token_count)
 {
     // Checking if input was an assignment, in which case the variable is set
     if(check_match(tokens[0], ASSIGNMENT_PATTERN) == MATCH){
@@ -167,7 +167,7 @@ void parse(token_t tokens[MAX_NUM_TOKENS], int token_count)
     }
 }
 
-int variable_expansion(token_t tokens[MAX_NUM_TOKENS], int token_count)
+int variable_expansion(token_t *tokens, int token_count)
 {   
     for(int i=0; i < token_count; i++){
         if(expand(tokens[i]) == ERR_INVALID_SYNTAX)
@@ -177,7 +177,7 @@ int variable_expansion(token_t tokens[MAX_NUM_TOKENS], int token_count)
     return OK;
 }
 
-int expand(char* string)
+int expand(char *string)
 {   
     char result[MAX_VAR_VALUE_STRLEN] = "\0";
     char *start_ptr = strchr(string, '$');
@@ -190,10 +190,12 @@ int expand(char* string)
         print_error(ERR_INVALID_SYNTAX, result);
         return ERR_INVALID_SYNTAX;
     } else {
-        strcpy(string, result);
+        int index = strlen(string) - strlen(start_ptr);
+        string[index] = '\0';
+        strcat(string, result);
 
         // Recursive case
-        expand(string);
+        return expand(string);
     }
 }
 
@@ -209,10 +211,10 @@ void execute(token_t *tokens, int start, int end)
     // If input is redirected, the first line is read from the file to be given to 
     // commands which take only one argument
     if((redir = is_inredir()) && command != ECHO) {
-        if(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL)
+        if(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL){
             if(line[strlen(line)-1] == '\n')
                 line[strlen(line)-1] = '\0';
-        else 
+        } else 
             print_error(ERR_GENERIC, "error redirecting input");
 
         strcpy(tokens[1], line);

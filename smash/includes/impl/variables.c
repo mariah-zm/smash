@@ -101,7 +101,7 @@ int expand_var(shell_var *var_map, char* input, char* result)
             i++;
             input++;
         }
-
+        var_name[i] = '\0';
         extra_chars = input;
     } else {
         strcpy(result, "missing or extra, \'{\' \'}\'");

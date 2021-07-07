@@ -110,26 +110,3 @@ bool contains_delim(char delimeter, char* string)
         }
     }
 }
-
-bool is_quoted(char* full_string, char* sub_string)
-{
-    if(sub_string == NULL)
-        return false;
-
-    // Only one quote exists before the sub-string, it means the sub string  
-    return check_match(sub_string, "^[^\"]*[\"][^\"]*([^\"]*[\"][^\"]*[\"])*$");
-}
-
-bool is_escaped(char* ptr)
-{
-    if(ptr == NULL)
-        return false;
-
-    ptr--;
-
-    if(*ptr == '\\')
-        return true;
-    else 
-        return false;
-}
-

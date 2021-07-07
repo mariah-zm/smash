@@ -44,9 +44,8 @@ void echo(token_t *tokens, int start, int end)
     } else {
         char line[MAX_TOKEN_STRLEN];
 
-        while(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL){
+        while(fgets(line, MAX_TOKEN_STRLEN, stdin) != NULL)
             printf("%s", line);
-        }
     }
 }
 
@@ -130,8 +129,8 @@ int unset(shell_var *var_map, char *name)
             free(var_map[i].name);
             free(var_map[i].value);
 
-            var_map[i].name == NULL;
-            var_map[i].value == NULL;
+            var_map[i].name = NULL;
+            var_map[i].value = NULL;
 
             if(var_map[i].is_env)
                 unsetenv(name);
@@ -205,7 +204,7 @@ void dirs(dirnode *head)
     printf("\n");
 }
 
-void free_dirs(dirnode **head)
+void destroy_dirs(dirnode **head)
 {
     dirnode *current = *head;
     dirnode *next;

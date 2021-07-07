@@ -26,7 +26,7 @@ int redir_in(token_t *tokens, int in_pos)
     file_name = tokens[in_pos + 1];
 
     int fd;
-    fd = open(file_name, O_RDONLY, S_IRUSR);
+    fd = open(file_name, O_RDONLY | _IONBF, S_IRUSR);
 
     if (fd < 0)
         return ERR_FILE_NOT_FOUND;
@@ -67,7 +67,7 @@ int redir_out(token_t *tokens, int out_pos, int write_flag)
     return OK;
 }
 
-bool is_inredir()
+bool is_inredir(void)
 {
     return changed_in;
 }

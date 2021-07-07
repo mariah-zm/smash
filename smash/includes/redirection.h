@@ -16,4 +16,4 @@ int redir_in(token_t *tokens, int in_pos);
 
 int redir_out(token_t *tokens, int out_pos, int write_flag);
 
-bool is_inredir();
+bool is_inredir(void);

@@ -1,1 +1,7 @@
-/home/mariah/Downloads
+total 84
+-rw-rw-r-- 1 mariah mariah   401 Lul  6 22:23 CMakeLists.txt
+drwxrwxr-x 3 mariah mariah  4096 Lul  7 16:51 includes
+drwxrwxr-x 2 mariah mariah  4096 Apr 19 17:09 linenoise
+-rw-rw-r-- 1 mariah mariah 13796 Lul  7 20:58 main.c
+-rwxrwxr-x 1 mariah mariah 56968 Lul  7 22:37 smash
+-rw-rw-r-- 1 mariah mariah     0 Lul  7 22:40 text.txt

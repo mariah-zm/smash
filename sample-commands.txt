@@ -1,0 +1,35 @@
+Compiling 
+gcc -Wall main.c linenoise/linenoise.c includes/impl/utils.c includes/impl/errors.c includes/impl/external.c includes/impl/internal.c includes/impl/redirection.c includes/impl/tokeniser.c includes/impl/variables.c -o smash 
+
+------- Var Assignment --------------------------------------------------------
+
+CPS1012="Operating Systems and Systems Programming 1"
+
+showvar CPS1012
+showenv CPS1012
+export CPS1012
+showenv CPS1012
+
+------- Quote Removal and Expansion --------------------------------------------
+
+echo "Hello World! Do you like $CPS1012?"
+
+
+------- Dirstack ---------------------------------------------------------------
+
+pushd /home/mariah/University
+pushd /home/mariah/Desktop/University
+
+popd
+
+------- Output Redirection -----------------------------------------------------
+
+ls -l > text.txt
+
+cat text.txt
+
+echo < text.txt
+
+------- Pipes ------------------------------------------------------------------
+
+ls -l | grep .txt | wc -l | figlet

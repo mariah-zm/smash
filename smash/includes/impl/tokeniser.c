@@ -24,7 +24,7 @@ void tokenise(token_t *tokens, char* input, int* index, int delim_level)
     char delim = get_delim(delim_level);
     
     /* If the string does not contain the unquoted metacharacter, tokenisation is done
-     * using the next metacharacter in the sequence as a delimeter
+     * using the next metacharacter in the sequence as a delimiter
      */
     if(contains_delim(delim, input)) {
         char* right = strchr(input, delim);
@@ -78,20 +78,20 @@ char get_delim(int delim_lev)
     }
 }
 
-bool contains_delim(char delimeter, char* string)
+bool contains_delim(char delimiter, char* string)
 {
     char* ptr;
 
-    if((ptr = strchr(string, delimeter)) == NULL){
+    if((ptr = strchr(string, delimiter)) == NULL){
         return false;
     } else {
         // If occurence is quoted or escaped then it is a literal value
         if(is_quoted(string, ptr)){
             char* new_ptr = strchr(ptr, '\"');
             // Checking for any other occurence past the quotation
-            return contains_delim(delimeter, ++new_ptr);
+            return contains_delim(delimiter, ++new_ptr);
         } else if(is_escaped(ptr)){
-            return contains_delim(delimeter, ++ptr);
+            return contains_delim(delimiter, ++ptr);
         } else {
             return true;
         }

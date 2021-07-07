@@ -18,14 +18,9 @@ shell_var *init_shell_vars(char *shell, char **envp)
         return NULL;
 
     // Initialising all environment variables as shell variables
-    char name[MAX_VAR_NAME_STRLEN];
-    char value[MAX_VAR_VALUE_STRLEN];
-
     while(*envp != NULL){
-        if(var_assignment(*envp, name, value) != 0)
+        if(var_assignment(var_map, *envp) != OK)
             return NULL;
-        
-        insert_shell_var(var_map, name, value, true);
         
         envp++;
     }
@@ -140,7 +135,7 @@ bool is_var_name_char(char character)
         return false;
 }
 
-int var_assignment(char *assignment, char *var_name, char *var_value)
+int var_assignment(shell_var *var_map, char *assignment)
 {
     char *name = strtok(assignment, "=");
     char *value = strtok(NULL, "\0");
@@ -148,10 +143,7 @@ int var_assignment(char *assignment, char *var_name, char *var_value)
     if(!is_var_name_valid(name))
         return ERR_INVALID_SYNTAX;
 
-    strcpy(var_name, name);
-    strcpy(var_value, value);
-     
-    return OK;
+    return insert_shell_var(var_map, name, value, false);
 }
 
 bool is_var_name_valid(char* name)
@@ -163,29 +155,12 @@ bool is_var_name_valid(char* name)
         return false;
 }
 
-void destroy_shell_vars(shell_var *var_map)
-{
-    free(var_map);
-}
-
-int update_shell_var(shell_var *var_map, int index, char *value)
-{
-    var_map[index].value = (char *) realloc(var_map[index].value, strlen(value) + 1);
-    strcpy(var_map[index].value, value);
-
-    if(var_map[index].is_env) 
-        if(setenv(var_map[index].name, var_map[index].value, 1) != 0)
-            return ERR_SET;   
-
-    return OK;
-}
-
 int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
 {
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(var_map[i].name != NULL){
+    while(strlen(var_map[i].name) != 0){
         // If a variable with that name already exists, update its contents
         if(strcmp(var_map[i].name, name) == 0)
             return update_shell_var(var_map, i, value);
@@ -196,13 +171,6 @@ int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
         if(i == hash_index)
             return ERR_SET;
     }
-
-    var_map[i].name = (char *) malloc(strlen(name) + 1);
-    var_map[i].value = (char *) malloc(strlen(value) + 1);
-
-    // Return if memory wasn't allocated properly
-    if(var_map[i].name == NULL || var_map[i].value == NULL)
-        return ERR_SET;
 
     strcpy(var_map[i].name, name);
     strcpy(var_map[i].value, value);
@@ -215,12 +183,23 @@ int insert_shell_var(shell_var *var_map, char *name, char* value, bool is_env)
     return OK;
 }
 
+int update_shell_var(shell_var *var_map, int index, char *value)
+{
+    strcpy(var_map[index].value, value);
+
+    if(var_map[index].is_env) 
+        if(setenv(var_map[index].name, var_map[index].value, 1) != 0)
+            return ERR_SET;   
+
+    return OK;
+}
+
 char *get_shell_var(shell_var *var_map, char *name)
 {
     int hash_index = get_hashcode(name);
     int i = hash_index;
 
-    while(var_map[i].name != NULL){
+    while(strlen(var_map[i].name) != 0){
         if(strcmp(var_map[i].name, name) == 0)
             return var_map[i].value;
         
@@ -242,4 +221,9 @@ int get_hashcode(char *name)
     }
 
     return hash % MAX_VARIABLES;
+}
+
+void destroy_shell_vars(shell_var *var_map)
+{
+    free(var_map);
 }

@@ -126,11 +126,8 @@ int unset(shell_var *var_map, char *name)
 
     while(var_map[i].name != NULL){
         if(strcmp(var_map[i].name, name) == 0){
-            free(var_map[i].name);
-            free(var_map[i].value);
-
-            var_map[i].name = NULL;
-            var_map[i].value = NULL;
+            strcpy(var_map[i].name, "\0");
+            strcpy(var_map[i].value, "\0");
 
             if(var_map[i].is_env)
                 unsetenv(name);

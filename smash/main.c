@@ -160,11 +160,9 @@ void parse(token_t *tokens, int token_count)
         char name[MAX_VAR_NAME_STRLEN];
         char value[MAX_VAR_VALUE_STRLEN];
 
-        if(var_assignment(tokens[0], name, value) == ERR_INVALID_SYNTAX) 
+        if(var_assignment(shell_variables, tokens[0]) == ERR_INVALID_SYNTAX) 
             print_error(ERR_INVALID_SYNTAX, NULL);
-        else
-            insert_shell_var(shell_variables, name, value, false);
-        
+    
     } else {
         // Hold the position of redir and pipe symbols, if any
         int semi_c, pipe, in_redir, out_redir;
